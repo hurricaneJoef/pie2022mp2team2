@@ -32,12 +32,15 @@ function arduino3DScanner(logfile,doScan)
     if nargin < 2
         doScan = true; % turn on the scan once we tell it to on the command window
     end
+clear s
 f = figure(); % start the figure for where we'll see the XYZ coordinates
 set(f,'KeyPressFcn',@handleKeyPress); % look out for the press that that will finalize the figure
 a = arduino(); %set up arduino
 port = a.Port;
 clear a
 a = arduino(port);
+baudrate = 9600;
+s = serialport(port,baudrate);
 dataRate = 10; %This is pretty arbitrary
 data = [0,0,0];
 C = zeros(90);
@@ -51,17 +54,27 @@ while ~shouldStop
     data(currElement, 1) = t;
 for phi = 0:90            %sweep through servo angles
     for theta = 0:90
-        writeline(arduino, num2str(phi)+', '+num2str(theta)+'\n') %make the arduino reach a position
-        pause(2)
-        r = str2double(readline(arduino)); %read IR data for the phi,theta
-        x = get_x_pos(phi,theta,r);
-        y = get_y_pos(phi,theta,r);
-        z = get_z_val(r);
-        data = [data;[x,y,z]]; %store values in a matrix
-        C(phi,theta) = z; %store z values in array for mapping the image
-        %TODO plot data live
+        writeline(arduino, num2str(phi)+','+num2str(theta)+'\n') %make the arduino reach a position
+        while timeout < 3
+            while s.NumBytesAvailable > 0
+                r = str2double(readline(arduino)); %read IR data for the phi,theta
+                x = get_x_pos(phi,theta,r);
+                y = get_y_pos(phi,theta,r);
+                z = get_z_val(r);
+                data = [data;[x,y,z]]; %store values in a matrix
+                C(phi,theta) = z; %store z values in array for mapping the image
+                % vv TODO plot data live
+                image(C)
+                hold on
+                drawnow
+                timeout = 3
+            end
+            pause(0.5)
+            timeout = timeout + 1
+        end
     end
 end
+shouldStop = True;
 end
 
 image(C); %plots data as an image
