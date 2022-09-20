@@ -1,4 +1,10 @@
 #include <QuickMedianLib.h>
+#include <Servo.h>
+
+#define p1  0.0001066
+#define p2  -0.1252
+#define p3  44.02
+
 
 #define distPin A3
 
@@ -6,13 +12,13 @@
 #define yServoPin 10
 
 #define prereadDelay 40
-#define readDelay 20
-#define readSamples 5
+#define readDelay 10
+#define readSamples 10
 
 #define baud 9600
 #define serialDelay 20
 
-#define maxMessagesize 32
+#define maxMessageSize 32
 
 #define moveDelay 500
 
@@ -22,7 +28,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(baud);
   xServo.attach(xServoPin);
-  ySefvo.attach(yServoPin);
+  yServo.attach(yServoPin);
   delay(1000);
   Serial.println(F("pie mp2 scanner"));
 }
@@ -41,17 +47,15 @@ int readDistNow(){
   
 }
 
-int convertFromRaw(int raw){
-  return(raw); // TODO just a pass through rn
+int convertFromRaw(int raw){//16ths
+  float fraw = float(raw);
+  float out = (p1*fraw*fraw+p2*fraw+p3)*16;
+  return(round(out));
 }
 
-
-void sendData(int pan, int tilt, int dist){
-  
-}
 
 int convertPos2Raw(int pos){
-  return pos;
+  return(map(pos,0,90,500,1500));
 }
 
 void setPos(int _pan, int _tilt){
@@ -61,42 +65,49 @@ void setPos(int _pan, int _tilt){
 }
 
 void handleRead(int _pan, int _tilt){
-  setPos(pan,tilt);
-  Serial.print(pan);
+  setPos(_pan,_tilt);
+  Serial.print(_pan);
   Serial.print(",");
-  Serial.print(tilt);
+  Serial.print(_tilt);
+  Serial.print(",");
   Serial.println(readDistNow());
   
 }
 
-char message[maxMessageSize);
-int prevMessageSize = 0;
+char message[maxMessageSize];
 int pan = 0;
 int tilt = 0;
+bool finished = false;
 void loop() {
   if(Serial.available() >0 ){
+    Serial.println("ser avail");
     String currentStr = "";
     delay(serialDelay);
-    char currentLetter = Serial.read();
+    char currentLetter;
     do{
-      if(currentletter==','){
+      currentLetter = Serial.read();
+      delay(1);
+      //Serial.println(currentLetter);
+      if(currentLetter==','){
         pan = currentStr.toInt();
         currentStr="";
-      }else if(currentletter==13){
+      }else if(currentLetter==13||Serial.available() <=0){
         tilt = currentStr.toInt();
         currentStr="";
-        
+        handleRead(pan,tilt);
+        finished=true;
       }else{
-        currentStr+=currentletter;
+        currentStr+=currentLetter;
       }
-    }while(!finished)
-    if(prevMessageSize>=maxMessageSize){
-      Serial.println(F("ERROR TOO MANY CHAR"));
-    }
+      //Serial.print(currentStr);
+    }while(!finished);
+    finished=false;
+    delay(500);
   }
-  setPos(pan,tilt);
-  Serial.println(readDistNow());
-  delay(1000);
+  //setPos(pan,tilt);
+  //Serial.println(readDistNow());
+  delay(500);
+  //Serial.println("waiting");
   // put your main code here, to run repeatedly:
 
 }
