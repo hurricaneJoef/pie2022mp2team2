@@ -1,6 +1,11 @@
-% File designed to collect data from the Pan-Tilt Mechanism servos and the
+\789+% File designed to collect data from the Pan-Tilt Mechanism servos and the
 % IR sensor that scans the geometry of an object.
 function arduino3DScanner(logfile,doScan)
+Px = distance * sin(yaw) * cos(pitch) 
+Py = distance * sin(pitch) 
+Pz = distance * cos(yaw) * cos(pitch)
+
+
     function x = get_x_pos(phi,theta,r)
         x = r*sin(phi)*cos(theta);
     end
@@ -49,22 +54,26 @@ startTime = tic;
 while ~shouldStop
     t = toc(startTime);
     data(currElement, 1) = t;
-for phi = 0:90            %sweep through servo angles
+%TODO: Send Phi = Pan, Theta = Tilt (send only #, #\n) - store the PT as an
+%X and Y value that will then recieve the IR as Z
+%TODO: Recieve the IR value for the PT coord - convert from analog to 0-255
+for phi = 0:90
     for theta = 0:90
-        writeline(arduino, num2str(phi)+', '+num2str(theta)+'\n') %make the arduino reach a position
+        writeline(arduino, num2str(phi)+', '+num2str(theta)+'\n')
         pause(2)
-        r = str2double(readline(arduino)); %read IR data for the phi,theta
+        r = str2double(readline(arduino));
         x = get_x_pos(phi,theta,r);
         y = get_y_pos(phi,theta,r);
         z = get_z_val(r);
-        data = [data;[x,y,z]]; %store values in a matrix
-        C(phi,theta) = z; %store z values in array for mapping the image
-        %TODO plot data live
+        data = [data;[x,y,z]];
+        C(phi,theta) = z;
+        %TODO
     end
 end
 end
 
-image(C); %plots data as an image
+%TODO: Plot the point on XY at darkness 0-255, (bitmap ig)
+image(C);
 % remove keyboard handler to allow connection to the Arduino to clear
     set(f,'KeyPressFcn',@(a, b) 1);
     save(logfile, 'data');
