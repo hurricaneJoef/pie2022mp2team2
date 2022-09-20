@@ -12,8 +12,8 @@
 #define yServoPin 10
 
 #define prereadDelay 40
-#define readDelay 20
-#define readSamples 5
+#define readDelay 10
+#define readSamples 10
 
 #define baud 9600
 #define serialDelay 20
@@ -47,9 +47,9 @@ int readDistNow(){
   
 }
 
-int convertFromRaw(int raw){
+int convertFromRaw(int raw){//16ths
   float fraw = float(raw);
-  float out = p1*fraw*fraw+p2*fraw+p3;
+  float out = (p1*fraw*fraw+p2*fraw+p3)*16;
   return(round(out));
 }
 
