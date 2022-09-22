@@ -29,8 +29,8 @@ void setup() {
   Serial.begin(baud);
   xServo.attach(xServoPin);
   yServo.attach(yServoPin);
-  delay(1000);
-  Serial.println(F("pie mp2 scanner"));
+  delay(100);
+  //Serial.println(F("pie mp2 scanner"));
 }
 
 
@@ -80,7 +80,7 @@ int tilt = 0;
 bool finished = false;
 void loop() {
   if(Serial.available() >0 ){
-    Serial.println("ser avail");
+    //Serial.println("ser avail");
     String currentStr = "";
     delay(serialDelay);
     char currentLetter;
