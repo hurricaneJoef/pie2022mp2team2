@@ -1,15 +1,13 @@
 % File designed to collect data from the Pan-Tilt Mechanism servos and the
 % IR sensor that scans the geometry of an object.
-
-
 function arduino3DScanner(logfile,doScan)
-    spacing = 2;
+
     function [x,y,z] = get_coords(phi,theta,r)
         phi = 45-phi;
         theta = 45-theta;
-        x= (r*cosd(theta)*sind(phi));
-        z= r*cosd(theta)*cosd(phi);
-        y= -r*sind(theta);
+        z= uint8(r*sind(theta)*cosd(phi));
+        x= r*cosd(theta)*cosd(phi);
+        y = r*sind(theta);
     end
     %the function below was adapted from QEA3s
     %arduinoLibraryConnectionTherma to act as a 'stop' in case of an
@@ -52,8 +50,8 @@ writeline(s, '45,45')
 pause(4)
 while ~shouldStop
 %sweep through the servo angles we'll be using
-for phi = 10:spacing:80
-    for theta = 10:spacing:80
+for phi = 10:10:80
+    for theta = 10:10:80
         coord = strcat(num2str(phi),',',num2str(theta));
         disp(strcat('sending ',coord))
         writeline(s, coord) %make the arduino reach a position

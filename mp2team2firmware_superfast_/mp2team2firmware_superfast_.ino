@@ -11,8 +11,8 @@
 #define xServoPin 9
 #define yServoPin 10
 
-#define prereadDelay 30
-#define readDelay 10
+#define prereadDelay 5
+#define readDelay 2
 #define readSamples 10
 
 #define baud 9600
@@ -21,7 +21,7 @@
 #define maxMessageSize 32
 
 #define moveSpeed 5 // ms/deg
-#define minMoveDelay 10
+#define minMoveDelay 1
 
 Servo xServo, yServo;
 
@@ -107,7 +107,7 @@ void loop() {
   }
   //setPos(pan,tilt);
   //Serial.println(readDistNow());
-  delay(50);
+  delay(5);
   //Serial.println("waiting");
   // put your main code here, to run repeatedly:
 
