@@ -1,13 +1,24 @@
 % File designed to collect data from the Pan-Tilt Mechanism servos and the
 % IR sensor that scans the geometry of an object.
-function arduino3DScanner(logfile,doScan)
 
+function arduino3DScanner(logfile)
+    clear s
+    tic;
+    spacing = 1;
+    pan_limits  = [25 65];
+    tilt_limits = [25 65];
     function [x,y,z] = get_coords(phi,theta,r)
         phi = 45-phi;
         theta = 45-theta;
-        z= uint8(r*sind(theta)*cosd(phi));
-        x= r*cosd(theta)*cosd(phi);
-        y = r*sind(theta);
+        tilt_arm = 2; %inch
+        pan_arm = 3/8;%inch
+        xs=(tilt_arm*cosd(theta)+pan_arm)*sind(phi);
+        zs=(tilt_arm*cosd(theta)+pan_arm)*cosd(phi);
+        ys=tilt_arm*sind(theta);
+        x= (r*cosd(theta)*sind(phi))+xs;
+        z= r*cosd(theta)*cosd(phi)-zs;
+        y= -r*sind(theta)+ys;
+        
     end
     %the function below was adapted from QEA3s
     %arduinoLibraryConnectionTherma to act as a 'stop' in case of an
@@ -28,38 +39,36 @@ function arduino3DScanner(logfile,doScan)
     end
 
     if nargin < 1
-        disp('Please specify a file to write the data to as the first argument');
-        return;
-    end
-    if nargin < 2
-        doScan = true; % turn on the scan once we tell it to on the command window
+        logfile = 'data.mat';
     end
     
 clear s
 f = figure(); % start the figure for where we'll see the XYZ coordinates
 set(f,'KeyPressFcn',@handleKeyPress); % look out for the press that that will finalize the figure
 %establish a hardcoded serial connection with the arduino.
-port = 'COM6';
-baudrate = 9600;
+port = '/dev/ttyACM0';%COM on windows
+baudrate = 115200;
 s = serialport(port,baudrate);
+configureTerminator(s,"CR");
 data = [0,0,0];
 shouldStop = false; 
 figure(f);
 pause(4); % wait to ensure the connection is 
 writeline(s, '45,45')
-pause(4)
+%pause(4)
 while ~shouldStop
 %sweep through the servo angles we'll be using
-for phi = 10:10:80
-    for theta = 10:10:80
+for phi = pan_limits(1):spacing:pan_limits(2)
+    for theta = tilt_limits(1):spacing:tilt_limits(2)
         coord = strcat(num2str(phi),',',num2str(theta));
-        disp(strcat('sending ',coord))
+        disp(strcat('sending_',coord))
         writeline(s, coord) %make the arduino reach a position
         timeout = 0;
         ready = 0;
-        while timeout < 20 && ~ready %breaks once a signal is received and is within the timeout threshold
-            while s.NumBytesAvailable > 0
+        while((timeout < 20) && (ready<1)) %breaks once a signal is received and is within the timeout threshold
+            while s.NumBytesAvailable > 1
                 read = readline(s);
+                disp(read)
                 ready = 1;
                 vals = split(read, ',');
                 r = (str2double(vals(3))/16)+2.25; %read IR data for the phi,theta
@@ -71,8 +80,10 @@ for phi = 10:10:80
                 hold on
                 drawnow
             end
-            pause(0.5)
-            timeout = timeout + 1;
+            if ~ready
+                pause(0.25)
+                timeout = timeout + 1;
+            end
         end
     end
 end
@@ -80,5 +91,6 @@ shouldStop = true;
 end
 % remove keyboard handler to allow connection to the Arduino to clear
     set(f,'KeyPressFcn',@(a, b) 1);
+    disp(toc)
     save(logfile, 'data');
 end
