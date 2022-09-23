@@ -11,7 +11,7 @@
 #define xServoPin 9
 #define yServoPin 10
 
-#define prereadDelay 40
+#define prereadDelay 30
 #define readDelay 10
 #define readSamples 10
 
@@ -20,7 +20,8 @@
 
 #define maxMessageSize 32
 
-#define moveDelay 500
+#define moveSpeed 5 // ms/deg
+#define minMoveDelay 10
 
 Servo xServo, yServo;
 
@@ -61,7 +62,7 @@ int convertPos2Raw(int pos){
 void setPos(int _pan, int _tilt){
   xServo.writeMicroseconds(convertPos2Raw(_pan));
   yServo.writeMicroseconds(convertPos2Raw(_tilt));
-  delay(moveDelay);
+  delay(max(_pan,_tilt)*moveSpeed+minMoveDelay);
 }
 
 void handleRead(int _pan, int _tilt){
@@ -102,11 +103,11 @@ void loop() {
       //Serial.print(currentStr);
     }while(!finished);
     finished=false;
-    delay(500);
+    delay(5);
   }
   //setPos(pan,tilt);
   //Serial.println(readDistNow());
-  delay(500);
+  delay(50);
   //Serial.println("waiting");
   // put your main code here, to run repeatedly:
 
