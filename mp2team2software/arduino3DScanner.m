@@ -3,7 +3,7 @@
 
 
 function arduino3DScanner(logfile,doScan)
-    spacing = 5;
+    spacing = 2;
     function [x,y,z] = get_coords(phi,theta,r)
         phi = 45-phi;
         theta = 45-theta;
