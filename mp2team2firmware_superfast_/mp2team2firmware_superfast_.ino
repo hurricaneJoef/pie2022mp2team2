@@ -11,18 +11,17 @@
 #define xServoPin 9
 #define yServoPin 10
 
-#define prereadDelay 5
-#define readDelay 2
-#define readSamples 10
+#define prereadDelay 0
+#define readDelay 1
+#define readSamples 5
 
-#define baud 9600
-#define serialDelay 20
+#define baud 115200
+#define serialDelay 1
 
 #define maxMessageSize 32
 
 #define moveSpeed 5 // ms/deg
-#define minMoveDelay 1
-
+#define minMoveDelay 0
 Servo xServo, yServo;
 
 void setup() {
@@ -48,6 +47,9 @@ int readDistNow(){
   
 }
 
+int prev_pan = 0;
+int prev_tilt = 0;
+
 int convertFromRaw(int raw){//16ths
   float fraw = float(raw);
   float out = (p1*fraw*fraw+p2*fraw+p3)*16;
@@ -62,7 +64,9 @@ int convertPos2Raw(int pos){
 void setPos(int _pan, int _tilt){
   xServo.writeMicroseconds(convertPos2Raw(_pan));
   yServo.writeMicroseconds(convertPos2Raw(_tilt));
-  delay(max(_pan,_tilt)*moveSpeed+minMoveDelay);
+  delay((max(abs(prev_pan-_pan),abs(prev_tilt-_tilt))*moveSpeed)+minMoveDelay);
+  prev_pan = _pan;
+  prev_tilt = _tilt;
 }
 
 void handleRead(int _pan, int _tilt){
@@ -92,7 +96,7 @@ void loop() {
       if(currentLetter==','){
         pan = currentStr.toInt();
         currentStr="";
-      }else if(currentLetter==13||Serial.available() <=0){
+      }else if(currentLetter==13||Serial.available() <1){
         tilt = currentStr.toInt();
         currentStr="";
         handleRead(pan,tilt);
@@ -103,11 +107,11 @@ void loop() {
       //Serial.print(currentStr);
     }while(!finished);
     finished=false;
-    delay(5);
+    delay(2);
   }
   //setPos(pan,tilt);
   //Serial.println(readDistNow());
-  delay(5);
+  delay(2);
   //Serial.println("waiting");
   // put your main code here, to run repeatedly:
 
