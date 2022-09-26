@@ -5,7 +5,7 @@ function arduino3DScanner(logfile)
     clear s
     tic;
     spacing = 1;
-    pan_limits  = [25 65];
+    pan_limits  = [25 65]; 
     tilt_limits = [25 65];
     function [x,y,z] = get_coords(phi,theta,r)
         phi = 45-phi;
@@ -61,27 +61,23 @@ while ~shouldStop
 for phi = pan_limits(1):spacing:pan_limits(2)
     for theta = tilt_limits(1):spacing:tilt_limits(2)
         coord = strcat(num2str(phi),',',num2str(theta));
-        disp(strcat('sending_',coord))
         writeline(s, coord) %make the arduino reach a position
+        %disp(strcat('sending ',coord))
         timeout = 0;
         ready = 0;
-        while((timeout < 20) && (ready<1)) %breaks once a signal is received and is within the timeout threshold
+        while((timeout < 100) && (ready<1)) %breaks once a signal is received and is within the timeout threshold
             while s.NumBytesAvailable > 1
                 read = readline(s);
-                disp(read)
+                %disp(read)
                 ready = 1;
-                vals = split(read, ',');
-                r = (str2double(vals(3))/16); %read IR data for the phi,theta
-                [x,y,z] = get_coords(phi,theta,r);
+                vals = str2double(split(read, ','));
+                r = (vals(3)/16); %read IR data for the phi,theta
+                [x,y,z] = get_coords(vals(1),vals(2),r);
                 data = [data;[x,y,z]]; %store values in a matrix
-                point = 60;
-                scatter(x, y, point, z, 'filled')
-                %axis([-20 20 -20 20])
-                hold on
-                drawnow
+                
             end
             if ~ready
-                pause(0.25)
+                pause(0.05)
                 timeout = timeout + 1;
             end
         end
@@ -89,8 +85,11 @@ for phi = pan_limits(1):spacing:pan_limits(2)
 end
 shouldStop = true;
 end
+    data = data(2:end,:); % to remove 0,0,0 at start
+    disp(toc)
+    point = 60;
+    scatter(data(:,1), data(:,2), point, data(:,3), 'filled')
 % remove keyboard handler to allow connection to the Arduino to clear
     set(f,'KeyPressFcn',@(a, b) 1);
-    disp(toc)
     save(logfile, 'data');
 end

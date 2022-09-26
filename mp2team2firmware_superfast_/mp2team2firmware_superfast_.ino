@@ -11,15 +11,15 @@
 #define xServoPin 9 //pan/phi
 #define yServoPin 10 // tilt/theta
 
-#define readDelay 1 // ms between samples
-#define readSamples 5// numb of samples to tae median of
+#define readDelay 100 // us between samples
+#define readSamples 50// numb of samples to tae median of
 
 #define baud 115200
 
 #define maxMessageSize 32
 
 #define moveSpeed 5 // ms/deg (from servo datasheet)
-#define xtraMoveDelay 0 // extra delay of a move (added on to speed based delay)
+#define xtraMoveDelay 1 // extra delay of a move (added on to speed based delay)
 Servo xServo, yServo;
 
 
@@ -28,7 +28,7 @@ float readDistNow(){
   int dataPoints[readSamples];// init array of datapoints
   for(uint8_t i=0;i<readSamples;i++){ // loop to collect samples
     dataPoints[i] = analogRead(distPin);
-    delay(readDelay); // wait before next sample 
+    delayMicroseconds(readDelay); // wait before next sample 
   }
   int rawDist = QuickMedian<int>::GetMedian(dataPoints, readSamples); // get the median so the outlier is thrown out
   float dist = convertFromRaw(rawDist); // convert to 16ths of an inch
@@ -61,18 +61,12 @@ void setPos(int _pan, int _tilt){
 void handleRead(int _pan, int _tilt){// print the 2 cords and the values
   setPos(_pan,_tilt);// set pos (and wait until there)
   Serial.println(String(_pan)+F(",")+String(_tilt)+F(",")+String(readDistNow()));
-  //Serial.print(_pan);
-  //Serial.print(",");
-  //Serial.print(_tilt); 
-  //Serial.print(",");
-  //Serial.println(readDistNow()); 
-  
 }
 
 
 char message[maxMessageSize];
-int pan = 0;
-int tilt = 0;
+int pan = 45;
+int tilt = 45;
 char currentLetter;
 String currentStr = "";
 
@@ -87,7 +81,7 @@ void setup() {
 
 
 void loop() {
-  if(Serial.available() >0 ){ // wait for serial input
+  if(Serial.available() > 0 ){ // wait for serial input
       currentLetter = Serial.read(); // set char
       if(currentLetter==','){ // use the comma to delimit the str
         pan = currentStr.toInt(); // save current as the pan
@@ -97,7 +91,8 @@ void loop() {
         currentStr=""; //            and reset
         handleRead(pan,tilt); // then handle the read and send it to matlab
         pan=-1000; // could have been -1 but then you couldnt push the limits of the system so crazy low num instead
-      }else{
+      }//else if(currentLetter==13){Serial.println(F("error no pan value"));}// for debugging 
+      else{
         currentStr+=currentLetter; // otherwise keep moving on
       }
   }
