@@ -5,8 +5,8 @@ function arduino3DScanner(logfile)
     clear s
     tic;
     spacing = 1;
-    pan_limits  = [25 65]; 
-    tilt_limits = [25 65];
+    pan_limits  = [20 70]; 
+    tilt_limits = [20 70];
     function [x,y,z] = get_coords(phi,theta,r)
         phi = 45-phi;
         theta = 45-theta;
@@ -58,10 +58,14 @@ writeline(s, '45,45')
 %pause(4)
 while ~shouldStop
 %sweep through the servo angles we'll be using
-
+flipIt = false;
 for phi = pan_limits(1):spacing:pan_limits(2)
-
-    for theta = (tilt_limits(1):spacing:tilt_limits(2))
+    flipIt = ~flipIt;
+    thetaVals = (tilt_limits(1):spacing:tilt_limits(2));
+    if flipIt
+        thetaVals = flip(thetaVals);
+    end
+    for theta = thetaVals
         coord = strcat(num2str(phi),',',num2str(theta));
         writeline(s, coord) %make the arduino reach a position
         %disp(strcat('sending ',coord))
@@ -89,7 +93,7 @@ shouldStop = true;
 end
     data = data(2:end,:); % to remove 0,0,0 at start
     disp(toc)
-    point = 60;
+    point = 20;
     scatter(data(:,1), data(:,2), point, data(:,3), 'filled')
 % remove keyboard handler to allow connection to the Arduino to clear
     set(f,'KeyPressFcn',@(a, b) 1);

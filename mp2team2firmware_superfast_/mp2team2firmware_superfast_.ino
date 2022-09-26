@@ -14,12 +14,12 @@
 #define readDelay 100 // us between samples
 #define readSamples 50// numb of samples to tae median of
 
-#define baud 115200
+#define baud 2500000//115200
 
 #define maxMessageSize 32
 
 #define moveSpeed 5 // ms/deg (from servo datasheet)
-#define xtraMoveDelay 1 // extra delay of a move (added on to speed based delay)
+#define xtraMoveDelay 2 // extra delay of a move (added on to speed based delay)
 Servo xServo, yServo;
 
 
