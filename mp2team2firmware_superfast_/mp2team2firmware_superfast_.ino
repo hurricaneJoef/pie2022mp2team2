@@ -81,7 +81,7 @@ char message[maxMessageSize];
 int pan = 0;
 int tilt = 0;
 bool finished = false;
-void loop() {  // i could have refactored this to be faster but i didnt have the time and t
+void loop() {  // i could have refactored this to be faster but i didnt have the time to
   if(Serial.available() >0 ){ // wait for serial input
     String currentStr = "";
     delay(serialDelay); // wait for most of the message to come in
