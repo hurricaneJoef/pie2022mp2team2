@@ -58,8 +58,10 @@ writeline(s, '45,45')
 %pause(4)
 while ~shouldStop
 %sweep through the servo angles we'll be using
+
 for phi = pan_limits(1):spacing:pan_limits(2)
-    for theta = tilt_limits(1):spacing:tilt_limits(2)
+
+    for theta = (tilt_limits(1):spacing:tilt_limits(2))
         coord = strcat(num2str(phi),',',num2str(theta));
         writeline(s, coord) %make the arduino reach a position
         %disp(strcat('sending ',coord))
